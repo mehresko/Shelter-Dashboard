@@ -495,9 +495,8 @@ function transformApiResponse(animalsJson, orgsJson) {
   const animals = animalsJson.data || [];
   const orgs = orgsJson.data || [];
 
-  // Determine species from breedPrimary since species attribute isn't returned
+  // Determine species from searchString
   function getSpecies(a) {
-    const breed = (a.attributes?.breedPrimary || "").toLowerCase();
     const search = (a.attributes?.searchString || "").toLowerCase();
     if (search.includes(" cats") || search.includes(" cat ")) return "Cats";
     if (search.includes(" dogs") || search.includes(" dog ")) return "Dogs";
@@ -523,14 +522,21 @@ function transformApiResponse(animalsJson, orgsJson) {
     ageCounts[key]++;
   });
 
-  // Length of stay using createdDate
+  // Length of stay — use updatedDate as proxy since createdDate
+  // reflects first listing date, not shelter intake date.
+  // We cap at 365 days to avoid skewing from long-term listings.
   const now = new Date();
   const losBySpecies = {};
+  const losCapDays = 365;
+
   animals.forEach(a => {
     const s = getSpecies(a);
-    const intake = a.attributes?.createdDate
-      ? new Date(a.attributes.createdDate) : now;
-    const days = Math.max(0, Math.round((now - intake) / 86400000));
+    const dateStr = a.attributes?.updatedDate || a.attributes?.createdDate;
+    const refDate = dateStr ? new Date(dateStr) : now;
+    const days = Math.min(
+      losCapDays,
+      Math.max(0, Math.round((now - refDate) / 86400000))
+    );
     if (!losBySpecies[s]) losBySpecies[s] = { short: 0, mid: 0, long: 0 };
     if (days <= 7) losBySpecies[s].short++;
     else if (days <= 30) losBySpecies[s].mid++;
@@ -540,7 +546,7 @@ function transformApiResponse(animalsJson, orgsJson) {
   const speciesKeys = Object.keys(speciesCounts).length
     ? Object.keys(speciesCounts) : ["Dogs", "Cats", "Other"];
 
-  // Build shelter rows
+  // Build shelter rows — avg stay capped at losCapDays
   const shelterRows = orgs.map(org => {
     const orgAnimals = animals.filter(a => {
       const rel = a.relationships?.orgs?.data;
@@ -549,9 +555,13 @@ function transformApiResponse(animalsJson, orgsJson) {
         : rel?.id === org.id;
     });
     const totalDays = orgAnimals.reduce((sum, a) => {
-      const intake = a.attributes?.createdDate
-        ? new Date(a.attributes.createdDate) : now;
-      return sum + Math.max(0, Math.round((now - intake) / 86400000));
+      const dateStr = a.attributes?.updatedDate || a.attributes?.createdDate;
+      const refDate = dateStr ? new Date(dateStr) : now;
+      const days = Math.min(
+        losCapDays,
+        Math.max(0, Math.round((now - refDate) / 86400000))
+      );
+      return sum + days;
     }, 0);
     return {
       name: org.attributes?.name || "Unknown",
