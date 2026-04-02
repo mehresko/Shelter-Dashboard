@@ -621,15 +621,35 @@ function render(d) {
   const tickStyle = { color: "#9B9A96", font: { family: "'DM Sans', sans-serif", size: 11 } };
   const gridStyle = { color: "rgba(0,0,0,0.06)" };
 
-  // Species donut
-  new Chart(document.getElementById("c1"), {
-    type: "doughnut",
-    data: {
-      labels: d.species.labels,
-      datasets: [{ data: d.species.data, backgroundColor: ["#378ADD","#1D9E75","#EF9F27","#888780"], borderWidth: 0, hoverOffset: 4 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: "68%" }
-  });
+  // Species donut — build legend dynamically from real data
+const speciesColors = ["#378ADD","#1D9E75","#EF9F27","#888780","#7F77DD","#E24B4A"];
+const speciesTotal = d.species.data.reduce((s, v) => s + v, 0);
+const speciesLegendEl = document.getElementById("species-legend");
+speciesLegendEl.innerHTML = d.species.labels.map((label, i) => {
+  const pct = speciesTotal > 0
+    ? Math.round((d.species.data[i] / speciesTotal) * 100) : 0;
+  const color = speciesColors[i % speciesColors.length];
+  return `<span><span class="ld" style="background:${color}"></span>${label} ${pct}%</span>`;
+}).join("");
+
+new Chart(document.getElementById("c1"), {
+  type: "doughnut",
+  data: {
+    labels: d.species.labels,
+    datasets: [{
+      data: d.species.data,
+      backgroundColor: d.species.labels.map((_, i) => speciesColors[i % speciesColors.length]),
+      borderWidth: 0,
+      hoverOffset: 4
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    cutout: "68%"
+  }
+});
 
   // Age bar
   new Chart(document.getElementById("c2"), {
