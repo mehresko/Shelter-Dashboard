@@ -453,78 +453,108 @@ const MOCK = {
 /* ── Live API fetch (called when USE_LIVE_DATA = true) ── */
 async function fetchLiveData() {
   const base = "https://api.rescuegroups.org/v5/public";
-  const headers = { "Authorization": CONFIG.API_KEY, "Content-Type": "application/json" };
+  const headers = {
+    "Authorization": CONFIG.API_KEY,
+    "Content-Type": "application/vnd.api+json"
+  };
 
-  // Fetch animals available for adoption within radius
-  const animalsResp = await fetch(
-    `${base}/animals/search/available/?postal=${CONFIG.SEARCH_POSTAL_CODE}&distance=${CONFIG.SEARCH_RADIUS_MILES}&limit=250`,
-    { headers }
-  );
+  // Fetch animals via POST with radius filter
+  const animalsResp = await fetch(`${base}/animals/search/available/`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      data: {
+        filterRadius: {
+          postalcode: CONFIG.SEARCH_POSTAL_CODE,
+          miles: CONFIG.SEARCH_RADIUS_MILES
+        }
+      }
+    })
+  });
   const animalsJson = await animalsResp.json();
 
-  // Fetch organizations within radius
-  const orgsResp = await fetch(
-    `${base}/orgs/search/?postal=${CONFIG.SEARCH_POSTAL_CODE}&distance=${CONFIG.SEARCH_RADIUS_MILES}&limit=50`,
-    { headers }
-  );
+  // Fetch orgs via POST with radius filter
+  const orgsResp = await fetch(`${base}/orgs/search/`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      data: {
+        filterRadius: {
+          postalcode: CONFIG.SEARCH_POSTAL_CODE,
+          miles: CONFIG.SEARCH_RADIUS_MILES
+        }
+      }
+    })
+  });
   const orgsJson = await orgsResp.json();
 
-  // Transform API response into dashboard data structure
-  // (extend this transform as needed based on actual API field names)
   return transformApiResponse(animalsJson, orgsJson);
 }
 
 function transformApiResponse(animalsJson, orgsJson) {
   const animals = animalsJson.data || [];
+  const orgs = orgsJson.data || [];
 
-  // Species mix
+  // Species mix — use included species name or fall back to breedPrimary
   const speciesCounts = {};
   animals.forEach(a => {
-    const s = a.attributes?.species || "Other";
+    const s = a.attributes?.species || a.attributes?.breedPrimary || "Other";
     speciesCounts[s] = (speciesCounts[s] || 0) + 1;
   });
 
-  // Age groups (RescueGroups uses: Baby, Young, Adult, Senior)
+  // Age groups
   const ageCounts = { Baby: 0, Young: 0, Adult: 0, Senior: 0 };
   animals.forEach(a => {
     const age = a.attributes?.ageGroup || "Adult";
-    if (ageCounts[age] !== undefined) ageCounts[age]++;
+    const key = Object.keys(ageCounts).find(k => age.toLowerCase().includes(k.toLowerCase())) || "Adult";
+    ageCounts[key]++;
   });
 
-  // Length of stay by species
+  // Length of stay
   const now = new Date();
   const losBySpecies = {};
   animals.forEach(a => {
     const s = a.attributes?.species || "Other";
-    const intake = a.attributes?.intakeDate ? new Date(a.attributes.intakeDate) : now;
-    const days = Math.round((now - intake) / 86400000);
-    if (!losBySpecies[s]) losBySpecies[s] = { short: 0, mid: 0, long: 0, total: 0, days: 0 };
-    losBySpecies[s].total++;
-    losBySpecies[s].days += days;
+    const intake = a.attributes?.createdDate ? new Date(a.attributes.createdDate) : now;
+    const days = Math.max(0, Math.round((now - intake) / 86400000));
+    if (!losBySpecies[s]) losBySpecies[s] = { short: 0, mid: 0, long: 0 };
     if (days <= 7) losBySpecies[s].short++;
     else if (days <= 30) losBySpecies[s].mid++;
     else losBySpecies[s].long++;
   });
 
-  const speciesKeys = Object.keys(speciesCounts);
+  const speciesKeys = Object.keys(speciesCounts).length ? Object.keys(speciesCounts) : ["Dogs","Cats","Other"];
 
-  return {
-    shelters: (orgsJson.data || []).map(org => ({
+  // Build shelter rows — match animals to orgs via relationships
+  const shelterRows = orgs.map(org => {
+    const orgAnimals = animals.filter(a => {
+      const rel = a.relationships?.orgs?.data;
+      return Array.isArray(rel) ? rel.some(r => r.id === org.id) : rel?.id === org.id;
+    });
+    const totalDays = orgAnimals.reduce((sum, a) => {
+      const intake = a.attributes?.createdDate ? new Date(a.attributes.createdDate) : now;
+      return sum + Math.max(0, Math.round((now - intake) / 86400000));
+    }, 0);
+    return {
       name: org.attributes?.name || "Unknown",
       focal: org.id === CONFIG.FOCAL_ORG_ID,
-      inCare: animals.filter(a => a.relationships?.orgs?.data?.[0]?.id === org.id).length,
-      avgStay: 0,
+      inCare: orgAnimals.length,
+      avgStay: orgAnimals.length ? Math.round(totalDays / orgAnimals.length) : 0,
       adoptions: 0,
       capacity: 0,
-    })),
-    species: { labels: speciesKeys, data: speciesKeys.map(k => speciesCounts[k]) },
-    ages:    { labels: Object.keys(ageCounts), data: Object.values(ageCounts) },
-    trend:   MOCK.trend, // trend requires historical data not in public API — keep mock
+    };
+  }).sort((a, b) => b.inCare - a.inCare);
+
+  return {
+    shelters: shelterRows.length ? shelterRows : MOCK.shelters,
+    species: { labels: speciesKeys, data: speciesKeys.map(k => speciesCounts[k] || 0) },
+    ages: { labels: Object.keys(ageCounts), data: Object.values(ageCounts) },
+    trend: MOCK.trend,
     los: {
       labels: speciesKeys,
-      short:  speciesKeys.map(k => losBySpecies[k]?.short || 0),
-      mid:    speciesKeys.map(k => losBySpecies[k]?.mid   || 0),
-      long:   speciesKeys.map(k => losBySpecies[k]?.long  || 0),
+      short: speciesKeys.map(k => losBySpecies[k]?.short || 0),
+      mid:   speciesKeys.map(k => losBySpecies[k]?.mid   || 0),
+      long:  speciesKeys.map(k => losBySpecies[k]?.long  || 0),
     },
   };
 }
