@@ -495,10 +495,21 @@ function transformApiResponse(animalsJson, orgsJson) {
   const animals = animalsJson.data || [];
   const orgs = orgsJson.data || [];
 
-  // Species mix — use included species name or fall back to breedPrimary
+  // Determine species from breedPrimary since species attribute isn't returned
+  function getSpecies(a) {
+    const breed = (a.attributes?.breedPrimary || "").toLowerCase();
+    const search = (a.attributes?.searchString || "").toLowerCase();
+    if (search.includes(" cats") || search.includes(" cat ")) return "Cats";
+    if (search.includes(" dogs") || search.includes(" dog ")) return "Dogs";
+    if (search.includes(" horses") || search.includes(" horse")) return "Horses";
+    if (search.includes(" rabbits") || search.includes(" rabbit")) return "Rabbits";
+    return "Other";
+  }
+
+  // Species mix
   const speciesCounts = {};
   animals.forEach(a => {
-    const s = a.attributes?.species || a.attributes?.breedPrimary || "Other";
+    const s = getSpecies(a);
     speciesCounts[s] = (speciesCounts[s] || 0) + 1;
   });
 
@@ -506,16 +517,19 @@ function transformApiResponse(animalsJson, orgsJson) {
   const ageCounts = { Baby: 0, Young: 0, Adult: 0, Senior: 0 };
   animals.forEach(a => {
     const age = a.attributes?.ageGroup || "Adult";
-    const key = Object.keys(ageCounts).find(k => age.toLowerCase().includes(k.toLowerCase())) || "Adult";
+    const key = Object.keys(ageCounts).find(
+      k => age.toLowerCase().includes(k.toLowerCase())
+    ) || "Adult";
     ageCounts[key]++;
   });
 
-  // Length of stay
+  // Length of stay using createdDate
   const now = new Date();
   const losBySpecies = {};
   animals.forEach(a => {
-    const s = a.attributes?.species || "Other";
-    const intake = a.attributes?.createdDate ? new Date(a.attributes.createdDate) : now;
+    const s = getSpecies(a);
+    const intake = a.attributes?.createdDate
+      ? new Date(a.attributes.createdDate) : now;
     const days = Math.max(0, Math.round((now - intake) / 86400000));
     if (!losBySpecies[s]) losBySpecies[s] = { short: 0, mid: 0, long: 0 };
     if (days <= 7) losBySpecies[s].short++;
@@ -523,23 +537,28 @@ function transformApiResponse(animalsJson, orgsJson) {
     else losBySpecies[s].long++;
   });
 
-  const speciesKeys = Object.keys(speciesCounts).length ? Object.keys(speciesCounts) : ["Dogs","Cats","Other"];
+  const speciesKeys = Object.keys(speciesCounts).length
+    ? Object.keys(speciesCounts) : ["Dogs", "Cats", "Other"];
 
-  // Build shelter rows — match animals to orgs via relationships
+  // Build shelter rows
   const shelterRows = orgs.map(org => {
     const orgAnimals = animals.filter(a => {
       const rel = a.relationships?.orgs?.data;
-      return Array.isArray(rel) ? rel.some(r => r.id === org.id) : rel?.id === org.id;
+      return Array.isArray(rel)
+        ? rel.some(r => r.id === org.id)
+        : rel?.id === org.id;
     });
     const totalDays = orgAnimals.reduce((sum, a) => {
-      const intake = a.attributes?.createdDate ? new Date(a.attributes.createdDate) : now;
+      const intake = a.attributes?.createdDate
+        ? new Date(a.attributes.createdDate) : now;
       return sum + Math.max(0, Math.round((now - intake) / 86400000));
     }, 0);
     return {
       name: org.attributes?.name || "Unknown",
       focal: org.id === CONFIG.FOCAL_ORG_ID,
       inCare: orgAnimals.length,
-      avgStay: orgAnimals.length ? Math.round(totalDays / orgAnimals.length) : 0,
+      avgStay: orgAnimals.length
+        ? Math.round(totalDays / orgAnimals.length) : 0,
       adoptions: 0,
       capacity: 0,
     };
@@ -547,8 +566,14 @@ function transformApiResponse(animalsJson, orgsJson) {
 
   return {
     shelters: shelterRows.length ? shelterRows : MOCK.shelters,
-    species: { labels: speciesKeys, data: speciesKeys.map(k => speciesCounts[k] || 0) },
-    ages: { labels: Object.keys(ageCounts), data: Object.values(ageCounts) },
+    species: {
+      labels: speciesKeys,
+      data: speciesKeys.map(k => speciesCounts[k] || 0)
+    },
+    ages: {
+      labels: Object.keys(ageCounts),
+      data: Object.values(ageCounts)
+    },
     trend: MOCK.trend,
     los: {
       labels: speciesKeys,
