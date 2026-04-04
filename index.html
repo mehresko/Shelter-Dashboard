@@ -591,6 +591,29 @@ function transformApiResponse(animalsJson, orgsJson) {
 
 /* ── Render dashboard ── */
 function render(d) {
+  // Update metric cards from live data
+  const totalAnimals = d.species.data.reduce((s, v) => s + v, 0);
+  const allLos = d.los.short.reduce((s, v) => s + v, 0)
+               + d.los.mid.reduce((s, v) => s + v, 0)
+               + d.los.long.reduce((s, v) => s + v, 0);
+  const longStay = d.los.long.reduce((s, v) => s + v, 0);
+  const longStayPct = totalAnimals > 0
+    ? Math.round((longStay / totalAnimals) * 100) : 0;
+  const avgStayDays = d.shelters.length
+    ? Math.round(d.shelters.filter(s => s.avgStay > 0)
+        .reduce((sum, s) => sum + s.avgStay, 0) /
+        Math.max(1, d.shelters.filter(s => s.avgStay > 0).length))
+    : 0;
+
+  document.getElementById("m-total").textContent = totalAnimals;
+  document.getElementById("m-total-delta").textContent = "across " + d.shelters.length + " organizations";
+  document.getElementById("m-los").innerHTML = avgStayDays + '<span> days</span>';
+  document.getElementById("m-los-delta").textContent = "avg across shelters with data";
+  document.getElementById("m-adoptions").textContent = "—";
+  document.getElementById("m-adoptions-delta").textContent = "not available via public API";
+  document.getElementById("m-longstay").textContent = longStay;
+  document.getElementById("m-longstay-delta").textContent = longStayPct + "% of total population";
+
   // Shelter table
   const tbody = document.getElementById("shelter-tbody");
   tbody.innerHTML = d.shelters.map(s => {
