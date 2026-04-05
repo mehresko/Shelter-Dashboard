@@ -339,9 +339,9 @@
       <div class="metric-delta delta-up" id="m-los-delta">&#9650; 3 days vs. last month</div>
     </div>
     <div class="metric">
-      <div class="metric-label">Adoptions this month</div>
-      <div class="metric-value" id="m-adoptions">89</div>
-      <div class="metric-delta delta-good" id="m-adoptions-delta">&#9660; 12 more than last month</div>
+    <div class="metric-label">Urgent animals</div>
+    <div class="metric-value" id="m-adoptions">0</div>
+    <div class="metric-delta delta-up" id="m-adoptions-delta">Priority placement needed</div>
     </div>
     <div class="metric">
       <div class="metric-label">Long-stay animals (&gt;30 days)</div>
@@ -540,6 +540,7 @@ function transformApiResponse(animalsJson, orgsJson) {
     else losBySpecies[s].long++;
   });
 
+  const urgentCount = animals.filter(a => a.attributes?.priority === 0).length;
   const speciesKeys = Object.keys(speciesCounts).length
     ? Object.keys(speciesCounts) : ["Dogs", "Cats", "Other"];
 
@@ -575,6 +576,7 @@ function transformApiResponse(animalsJson, orgsJson) {
     }).sort((a, b) => a.distance - b.distance);
 
   return {
+    urgent: urgentCount,
     shelters: shelterRows.length ? shelterRows : MOCK.shelters,
     species: {
       labels: speciesKeys,
@@ -615,8 +617,8 @@ function render(d) {
   document.getElementById("m-total-delta").textContent = "across " + d.shelters.length + " organizations";
   document.getElementById("m-los").innerHTML = avgStayDays + '<span> days</span>';
   document.getElementById("m-los-delta").textContent = "avg across shelters with data";
-  document.getElementById("m-adoptions").textContent = "—";
-  document.getElementById("m-adoptions-delta").textContent = "not available via public API";
+  document.getElementById("m-adoptions").textContent = d.urgent;
+  document.getElementById("m-adoptions-delta").textContent = d.urgent > 0 ? d.urgent + " animals need priority placement" : "No urgent animals currently";
   document.getElementById("m-longstay").textContent = longStay;
   document.getElementById("m-longstay-delta").textContent = longStayPct + "% of total population";
 
