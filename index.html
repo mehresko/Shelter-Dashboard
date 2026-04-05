@@ -611,6 +611,7 @@ function render(d) {
     : 0;
 
   document.getElementById("dashboard-subtitle").textContent = CONFIG.SEARCH_RADIUS_MILES + "-mile radius from " + CONFIG.SEARCH_POSTAL_CODE + " \u00B7 RescueGroups API \u00B7 Updated daily";
+  document.getElementById("m-total").textContent = totalAnimals;
   document.getElementById("m-total-delta").textContent = "across " + d.shelters.length + " organizations";
   document.getElementById("m-los").innerHTML = avgStayDays + '<span> days</span>';
   document.getElementById("m-los-delta").textContent = "avg across shelters with data";
@@ -619,6 +620,7 @@ function render(d) {
   document.getElementById("m-longstay").textContent = longStay;
   document.getElementById("m-longstay-delta").textContent = longStayPct + "% of total population";
 
+  
   // Shelter table
   const tbody = document.getElementById("shelter-tbody");
   tbody.innerHTML = d.shelters.map(s => {
