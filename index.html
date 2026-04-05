@@ -402,6 +402,7 @@
       <thead>
         <tr>
           <th>Organization</th>
+          <th>Location</th>
           <th>Distance</th>
           <th>In care</th>
           <th>Avg. stay</th>
@@ -563,6 +564,8 @@ function transformApiResponse(animalsJson, orgsJson) {
         name: org.attributes?.name || "Unknown",
         focal: org.id === CONFIG.FOCAL_ORG_ID,
         distance: Math.round(org.attributes?.distance || 0),
+        city: org.attributes?.city || "",
+        state: org.attributes?.state || "",
         inCare: orgAnimals.length,
         avgStay: orgAnimals.length
           ? Math.round(totalDays / orgAnimals.length) : 0,
@@ -622,6 +625,7 @@ function render(d) {
     const capColor = s.capacity >= 85 ? "#E24B4A" : s.capacity >= 65 ? "#EF9F27" : "#1D9E75";
     return `<tr class="${s.focal ? 'yhs' : ''}">
       <td class="org-name">${s.name}</td>
+      <td>${s.city}, ${s.state}</td>
       <td>${s.distance}</td>
       <td>${s.inCare}</td>
       <td>${s.avgStay} days</td>
