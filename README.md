@@ -1,2 +1,2 @@
 # Shelter-Dashboard
-This is a prototype dashboard demonstrating the use of the Petco Love Rescue Groups API
+This dashboard is a simple demonstration of the Rescue Groups API
