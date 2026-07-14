@@ -7,11 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  /* ============================================================
-     CONFIG — swap in your RescueGroups API key here when ready
-     See fetchLiveData() below to enable the real API call
-     ============================================================ */
-
   :root {
     --teal:    #1D9E75;
     --teal-lt: #E1F5EE;
@@ -46,7 +41,6 @@
     line-height: 1.6;
   }
 
-  /* ── Header ── */
   .header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -106,10 +100,8 @@
     50% { opacity: 0.4; }
   }
 
-  /* ── Layout ── */
   .main { padding: 1.5rem 2rem 3rem; max-width: 1200px; margin: 0 auto; }
 
-  /* ── Metric cards ── */
   .metrics {
     display: grid;
     grid-template-columns: repeat(4, minmax(0,1fr));
@@ -154,8 +146,8 @@
   .delta-up   { color: var(--red); }
   .delta-down { color: var(--teal); }
   .delta-good { color: var(--teal); }
+  .delta-neutral { color: var(--text-3); }
 
-  /* ── Chart grid ── */
   .chart-grid-2 {
     display: grid;
     grid-template-columns: minmax(0,1fr) minmax(0,1fr);
@@ -205,7 +197,6 @@
     flex-shrink: 0;
   }
 
-  /* ── Shelter table ── */
   .shelter-table {
     width: 100%;
     border-collapse: collapse;
@@ -249,22 +240,19 @@
   .org-name { font-weight: 500; color: var(--text); }
   .yhs .org-name { color: #0C447C; }
 
-  .cap-bar-wrap {
-    background: var(--gray-lt);
-    border-radius: 3px;
-    height: 5px;
-    width: 80px;
+  .pill {
     display: inline-block;
-    vertical-align: middle;
-    margin-right: 6px;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    margin-right: 3px;
+    font-family: var(--mono);
   }
 
-  .cap-bar {
-    height: 5px;
-    border-radius: 3px;
-  }
+  .pill-dog  { background: #E6F1FB; color: #0C447C; }
+  .pill-cat  { background: var(--teal-lt); color: #0F6E56; }
+  .pill-other { background: var(--gray-lt); color: #555; }
 
-  /* ── Footer ── */
   .footer {
     margin-top: 2rem;
     font-size: 11px;
@@ -288,8 +276,7 @@
      ============================================================ -->
 <script>
   const CONFIG = {
-
-    // Step 1: Paste your RescueGroups API key here when you receive it
+    // Step 1: Paste your RescueGroups API key here
     API_KEY: "dbw7cbfj",
 
     // Step 2: Set USE_LIVE_DATA to true once you have a valid API key
@@ -300,7 +287,6 @@
     SEARCH_POSTAL_CODE: "86301",
 
     // Step 4: Set your focal shelter's RescueGroups org ID here
-    // (Find it by searching organizations via the API once you have your key)
     FOCAL_ORG_ID: "",
     FOCAL_ORG_NAME: "Yavapai Humane Society",
   };
@@ -313,9 +299,7 @@
     <p id="dashboard-subtitle">Loading...</p>
   </div>
   <div style="display:flex;gap:8px;align-items:center;">
-    <span class="badge badge-mock" id="badge-mock">
-      <span>mock data</span>
-    </span>
+    <span class="badge badge-mock" id="badge-mock"><span>mock data</span></span>
     <span class="badge badge-live" id="badge-live">
       <span class="badge-dot"></span>
       <span>live</span>
@@ -330,23 +314,47 @@
   <div class="metrics">
     <div class="metric">
       <div class="metric-label">Animals in care</div>
-      <div class="metric-value" id="m-total">312</div>
-      <div class="metric-delta delta-up" id="m-total-delta">&#9650; 18 vs. last month</div>
+      <div class="metric-value" id="m-total">—</div>
+      <div class="metric-delta delta-neutral" id="m-total-delta">Loading...</div>
     </div>
     <div class="metric">
-      <div class="metric-label">Avg. length of stay</div>
-      <div class="metric-value" id="m-los">24<span> days</span></div>
-      <div class="metric-delta delta-up" id="m-los-delta">&#9650; 3 days vs. last month</div>
+      <div class="metric-label">Avg. days available</div>
+      <div class="metric-value" id="m-los">—<span> days</span></div>
+      <div class="metric-delta delta-neutral" id="m-los-delta">Since listed as available</div>
     </div>
     <div class="metric">
-    <div class="metric-label">Urgent animals</div>
-    <div class="metric-value" id="m-adoptions">0</div>
-    <div class="metric-delta delta-up" id="m-adoptions-delta">Priority placement needed</div>
+      <div class="metric-label">Urgent animals</div>
+      <div class="metric-value" id="m-urgent">—</div>
+      <div class="metric-delta delta-neutral" id="m-urgent-delta">Loading...</div>
     </div>
+    <div class="metric">
+      <div class="metric-label">Needs foster</div>
+      <div class="metric-value" id="m-foster">—</div>
+      <div class="metric-delta delta-neutral" id="m-foster-delta">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Second metric row -->
+  <div class="metrics" style="margin-bottom:1.5rem;">
     <div class="metric">
       <div class="metric-label">Long-stay animals (&gt;30 days)</div>
-      <div class="metric-value" id="m-longstay">47</div>
-      <div class="metric-delta delta-up" id="m-longstay-delta">15% of total population</div>
+      <div class="metric-value" id="m-longstay">—</div>
+      <div class="metric-delta delta-neutral" id="m-longstay-delta">Loading...</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Special needs</div>
+      <div class="metric-value" id="m-special">—</div>
+      <div class="metric-delta delta-neutral" id="m-special-delta">Loading...</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Adoption pending</div>
+      <div class="metric-value" id="m-pending">—</div>
+      <div class="metric-delta delta-good" id="m-pending-delta">Loading...</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">With pictures</div>
+      <div class="metric-value" id="m-pics">—</div>
+      <div class="metric-delta delta-neutral" id="m-pics-delta">Loading...</div>
     </div>
   </div>
 
@@ -355,7 +363,7 @@
     <div class="card" style="padding-bottom:1.5rem;">
       <div class="card-title">Species mix</div>
       <div class="card-sub">All shelters &middot; currently in care</div>
-     <div class="legend" id="species-legend"></div>
+      <div class="legend" id="species-legend"></div>
       <div style="position:relative;height:190px;padding-bottom:12px;"><canvas id="c1"></canvas></div>
     </div>
     <div class="card">
@@ -375,7 +383,7 @@
   <div class="chart-grid-2">
     <div class="card">
       <div class="card-title">Length of stay distribution</div>
-      <div class="card-sub">Current animals &middot; days in shelter</div>
+      <div class="card-sub">Current animals &middot; days listed as available</div>
       <div class="legend">
         <span><span class="ld" style="background:#1D9E75"></span>0–7 days</span>
         <span><span class="ld" style="background:#EF9F27"></span>8–30 days</span>
@@ -383,12 +391,23 @@
       </div>
       <div style="position:relative;height:210px;"><canvas id="c4"></canvas></div>
     </div>
+    <div class="card">
+      <div class="card-title">Size distribution</div>
+      <div class="card-sub">All species &middot; currently in care</div>
+      <div class="legend">
+        <span><span class="ld" style="background:#7F77DD"></span>Small</span>
+        <span><span class="ld" style="background:#378ADD"></span>Medium</span>
+        <span><span class="ld" style="background:#1D9E75"></span>Large</span>
+        <span><span class="ld" style="background:#EF9F27"></span>X-Large</span>
+      </div>
+      <div style="position:relative;height:210px;"><canvas id="c5"></canvas></div>
+    </div>
   </div>
 
   <!-- Shelter breakdown table -->
   <div class="card" style="margin-top:0;">
     <div class="card-title">Shelter breakdown</div>
-    <div class="card-sub">All organizations within 50 miles of Prescott, AZ &middot; capacity bar = % of estimated capacity</div>
+    <div class="card-sub" id="table-sub">Loading...</div>
     <table class="shelter-table">
       <thead>
         <tr>
@@ -396,19 +415,19 @@
           <th>Location</th>
           <th>Distance</th>
           <th>In care</th>
-          <th>Avg. stay</th>
-          <th>Adoptions</th>
-          <th>Capacity</th>
+          <th>Dogs / Cats / Other</th>
+          <th>Avg. days available</th>
+          <th>Urgent</th>
+          <th>Needs foster</th>
         </tr>
       </thead>
       <tbody id="shelter-tbody">
-        <!-- populated by JS -->
       </tbody>
     </table>
   </div>
 
   <div class="footer" id="footer-note">
-    Powered by RescueGroups.org API &middot; Built by Lisa Hresko &middot; Mock data &mdash; replace CONFIG.API_KEY and set USE_LIVE_DATA = true to connect
+    Powered by RescueGroups.org API &middot; Built by Lisa Hresko
   </div>
 
 </main>
@@ -417,28 +436,23 @@
 /* ── Mock data (used when USE_LIVE_DATA = false) ── */
 const MOCK = {
   shelters: [
-    { name: "Yavapai Humane Society",       focal: true,  inCare: 142, avgStay: 21, adoptions: 44, capacity: 71  },
-    { name: "Prescott Valley Animal Rescue", focal: false, inCare: 58,  avgStay: 27, adoptions: 18, capacity: 83  },
-    { name: "Chino Valley Animal Shelter",   focal: false, inCare: 44,  avgStay: 19, adoptions: 14, capacity: 55  },
-    { name: "Yavapai Humane Trappers",       focal: false, inCare: 38,  avgStay: 31, adoptions: 8,  capacity: 90  },
-    { name: "Camp Verde Animal Rescue",      focal: false, inCare: 30,  avgStay: 22, adoptions: 5,  capacity: 60  },
+    { name: "Yavapai Humane Society", focal: true,  distance: 5,  city: "Prescott",       state: "AZ", inCare: 142, dogs: 80, cats: 52, other: 10, avgStay: 21, urgent: 3, foster: 8 },
+    { name: "Prescott Valley Animal", focal: false, distance: 12, city: "Prescott Valley", state: "AZ", inCare: 58,  dogs: 30, cats: 20, other: 8,  avgStay: 27, urgent: 1, foster: 4 },
+    { name: "Chino Valley Shelter",   focal: false, distance: 22, city: "Chino Valley",    state: "AZ", inCare: 44,  dogs: 25, cats: 15, other: 4,  avgStay: 19, urgent: 0, foster: 2 },
   ],
-  species:   { labels: ["Dogs","Cats","Horses","Other"],   data: [159, 119, 22, 12] },
-  ages:      { labels: ["Baby","Young","Adult","Senior"],  data: [42, 88, 134, 48]  },
-  trend: {
-    labels:     ["Oct","Nov","Dec","Jan","Feb","Mar"],
-    adoptions:  [72, 68, 61, 77, 85, 89],
-    intakes:    [85, 79, 70, 88, 92, 96],
-  },
+  species:   { labels: ["Dogs","Cats","Horses","Other"], data: [159, 119, 22, 12] },
+  ages:      { labels: ["Baby","Young","Adult","Senior"], data: [42, 88, 134, 48] },
+  sizes:     { labels: ["Small","Medium","Large","X-Large"], data: [55, 98, 76, 15] },
   los: {
     labels: ["Dogs","Cats","Horses","Other"],
     short:  [48, 39, 5, 3],
     mid:    [72, 54, 11, 6],
     long:   [39, 26, 6, 3],
   },
+  urgent: 4, foster: 14, special: 7, pending: 22, pics: 198, longStay: 47,
 };
 
-/* ── Live API fetch (called when USE_LIVE_DATA = true) ── */
+/* ── Live API fetch ── */
 async function fetchLiveData() {
   const base = "https://api.rescuegroups.org/v5/public";
   const headers = {
@@ -446,35 +460,24 @@ async function fetchLiveData() {
     "Content-Type": "application/vnd.api+json"
   };
 
-  // Fetch animals via POST with radius filter
-  const animalsResp = await fetch(`${base}/animals/search/available/`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      data: {
-        filterRadius: {
-          postalcode: CONFIG.SEARCH_POSTAL_CODE,
-          miles: CONFIG.SEARCH_RADIUS_MILES
-        }
+  const body = (radius) => JSON.stringify({
+    data: {
+      filterRadius: {
+        postalcode: CONFIG.SEARCH_POSTAL_CODE,
+        miles: radius
       }
-    })
+    }
   });
-  const animalsJson = await animalsResp.json();
 
-  // Fetch orgs via POST with radius filter
-  const orgsResp = await fetch(`${base}/orgs/search/`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      data: {
-        filterRadius: {
-          postalcode: CONFIG.SEARCH_POSTAL_CODE,
-          miles: CONFIG.SEARCH_RADIUS_MILES
-        }
-      }
-    })
-  });
-  const orgsJson = await orgsResp.json();
+  const [animalsResp, orgsResp] = await Promise.all([
+    fetch(`${base}/animals/search/available/`, { method: "POST", headers, body: body(CONFIG.SEARCH_RADIUS_MILES) }),
+    fetch(`${base}/orgs/search/`, { method: "POST", headers, body: body(CONFIG.SEARCH_RADIUS_MILES) })
+  ]);
+
+  const [animalsJson, orgsJson] = await Promise.all([
+    animalsResp.json(),
+    orgsResp.json()
+  ]);
 
   return transformApiResponse(animalsJson, orgsJson);
 }
@@ -482,8 +485,10 @@ async function fetchLiveData() {
 function transformApiResponse(animalsJson, orgsJson) {
   const animals = animalsJson.data || [];
   const orgs = orgsJson.data || [];
+  const now = new Date();
+  const losCapDays = 365;
 
-  // Determine species from searchString
+  // Species detection
   function getSpecies(a) {
     const search = (a.attributes?.searchString || "").toLowerCase();
     if (search.includes(" cats") || search.includes(" cat ")) return "Cats";
@@ -491,6 +496,13 @@ function transformApiResponse(animalsJson, orgsJson) {
     if (search.includes(" horses") || search.includes(" horse")) return "Horses";
     if (search.includes(" rabbits") || search.includes(" rabbit")) return "Rabbits";
     return "Other";
+  }
+
+  // Days available — use availableDate, fall back to updatedDate, cap at losCapDays
+  function getDaysAvailable(a) {
+    const dateStr = a.attributes?.availableDate || a.attributes?.updatedDate || a.attributes?.createdDate;
+    if (!dateStr) return 0;
+    return Math.min(losCapDays, Math.max(0, Math.round((now - new Date(dateStr)) / 86400000)));
   }
 
   // Species mix
@@ -504,176 +516,163 @@ function transformApiResponse(animalsJson, orgsJson) {
   const ageCounts = { Baby: 0, Young: 0, Adult: 0, Senior: 0 };
   animals.forEach(a => {
     const age = a.attributes?.ageGroup || "Adult";
-    const key = Object.keys(ageCounts).find(
-      k => age.toLowerCase().includes(k.toLowerCase())
-    ) || "Adult";
+    const key = Object.keys(ageCounts).find(k => age.toLowerCase().includes(k.toLowerCase())) || "Adult";
     ageCounts[key]++;
   });
 
-  // Length of stay — use updatedDate as proxy since createdDate
-  // reflects first listing date, not shelter intake date.
-  // We cap at 365 days to avoid skewing from long-term listings.
-  const now = new Date();
-  const losBySpecies = {};
-  const losCapDays = 365;
+  // Size distribution
+  const sizeCounts = { Small: 0, Medium: 0, Large: 0, "X-Large": 0 };
+  animals.forEach(a => {
+    const size = a.attributes?.sizeGroup || "Medium";
+    if (sizeCounts[size] !== undefined) sizeCounts[size]++;
+    else sizeCounts["Medium"]++;
+  });
 
+  // Length of stay by species
+  const losBySpecies = {};
   animals.forEach(a => {
     const s = getSpecies(a);
-    const dateStr = a.attributes?.updatedDate || a.attributes?.createdDate;
-    const refDate = dateStr ? new Date(dateStr) : now;
-    const days = Math.min(
-      losCapDays,
-      Math.max(0, Math.round((now - refDate) / 86400000))
-    );
+    const days = getDaysAvailable(a);
     if (!losBySpecies[s]) losBySpecies[s] = { short: 0, mid: 0, long: 0 };
     if (days <= 7) losBySpecies[s].short++;
     else if (days <= 30) losBySpecies[s].mid++;
     else losBySpecies[s].long++;
   });
 
-  const urgentCount = animals.filter(a => a.attributes?.priority === 0).length;
-  const speciesKeys = Object.keys(speciesCounts).length
-    ? Object.keys(speciesCounts) : ["Dogs", "Cats", "Other"];
+  const speciesKeys = Object.keys(speciesCounts).length ? Object.keys(speciesCounts) : ["Dogs", "Cats", "Other"];
 
-  // Build shelter rows — avg stay capped at losCapDays
+  // Global metrics
+  const urgentCount   = animals.filter(a => a.attributes?.priority === 0).length;
+  const fosterCount   = animals.filter(a => a.attributes?.isNeedingFoster === true).length;
+  const specialCount  = animals.filter(a => a.attributes?.isSpecialNeeds === true).length;
+  const pendingCount  = animals.filter(a => a.attributes?.isAdoptionPending === true).length;
+  const picsCount     = animals.filter(a => (a.attributes?.pictureCount || 0) > 0).length;
+  const longStayCount = animals.filter(a => getDaysAvailable(a) > 30).length;
+  const totalDaysAvail = animals.reduce((sum, a) => sum + getDaysAvailable(a), 0);
+  const avgDaysAvail  = animals.length ? Math.round(totalDaysAvail / animals.length) : 0;
+
+  // Shelter rows
   const shelterRows = orgs.map(org => {
     const orgAnimals = animals.filter(a => {
       const rel = a.relationships?.orgs?.data;
-      return Array.isArray(rel)
-        ? rel.some(r => r.id === org.id)
-        : rel?.id === org.id;
+      return Array.isArray(rel) ? rel.some(r => r.id === org.id) : rel?.id === org.id;
     });
-    const totalDays = orgAnimals.reduce((sum, a) => {
-      const dateStr = a.attributes?.updatedDate || a.attributes?.createdDate;
-      const refDate = dateStr ? new Date(dateStr) : now;
-      const days = Math.min(
-        losCapDays,
-        Math.max(0, Math.round((now - refDate) / 86400000))
-      );
-      return sum + days;
-    }, 0);
-  return {
-        name: org.attributes?.name || "Unknown",
-        focal: org.id === CONFIG.FOCAL_ORG_ID,
-        distance: Math.round(org.attributes?.distance || 0),
-        city: org.attributes?.city || "",
-        state: org.attributes?.state || "",
-        inCare: orgAnimals.length,
-        avgStay: orgAnimals.length
-          ? Math.round(totalDays / orgAnimals.length) : 0,
-        adoptions: 0,
-        capacity: 0,
-      };
-    }).sort((a, b) => a.distance - b.distance);
+    const orgDays = orgAnimals.reduce((sum, a) => sum + getDaysAvailable(a), 0);
+    const dogs  = orgAnimals.filter(a => getSpecies(a) === "Dogs").length;
+    const cats  = orgAnimals.filter(a => getSpecies(a) === "Cats").length;
+    const other = orgAnimals.length - dogs - cats;
+    return {
+      name:     org.attributes?.name || "Unknown",
+      focal:    org.id === CONFIG.FOCAL_ORG_ID,
+      distance: Math.round(org.attributes?.distance || 0),
+      city:     org.attributes?.city || "",
+      state:    org.attributes?.state || "",
+      inCare:   orgAnimals.length,
+      dogs, cats, other,
+      avgStay:  orgAnimals.length ? Math.round(orgDays / orgAnimals.length) : 0,
+      urgent:   orgAnimals.filter(a => a.attributes?.priority === 0).length,
+      foster:   orgAnimals.filter(a => a.attributes?.isNeedingFoster === true).length,
+    };
+  }).sort((a, b) => a.distance - b.distance);
 
   return {
-    urgent: urgentCount,
     shelters: shelterRows.length ? shelterRows : MOCK.shelters,
-    species: {
-      labels: speciesKeys,
-      data: speciesKeys.map(k => speciesCounts[k] || 0)
-    },
-    ages: {
-      labels: Object.keys(ageCounts),
-      data: Object.values(ageCounts)
-    },
+    species:  { labels: speciesKeys, data: speciesKeys.map(k => speciesCounts[k] || 0) },
+    ages:     { labels: Object.keys(ageCounts), data: Object.values(ageCounts) },
+    sizes:    { labels: Object.keys(sizeCounts), data: Object.values(sizeCounts) },
     los: {
       labels: speciesKeys,
-      short: speciesKeys.map(k => losBySpecies[k]?.short || 0),
-      mid:   speciesKeys.map(k => losBySpecies[k]?.mid   || 0),
-      long:  speciesKeys.map(k => losBySpecies[k]?.long  || 0),
+      short:  speciesKeys.map(k => losBySpecies[k]?.short || 0),
+      mid:    speciesKeys.map(k => losBySpecies[k]?.mid   || 0),
+      long:   speciesKeys.map(k => losBySpecies[k]?.long  || 0),
     },
+    urgent: urgentCount, foster: fosterCount, special: specialCount,
+    pending: pendingCount, pics: picsCount, longStay: longStayCount,
+    avgDays: avgDaysAvail, total: animals.length,
   };
 }
 
-/* ── Render dashboard ── */
+/* ── Render ── */
 function render(d) {
-  // Update metric cards from live data
-  const totalAnimals = d.species.data.reduce((s, v) => s + v, 0);
-  const allLos = d.los.short.reduce((s, v) => s + v, 0)
-               + d.los.mid.reduce((s, v) => s + v, 0)
-               + d.los.long.reduce((s, v) => s + v, 0);
-  const longStay = d.los.long.reduce((s, v) => s + v, 0);
-  const longStayPct = totalAnimals > 0
-    ? Math.round((longStay / totalAnimals) * 100) : 0;
-  const avgStayDays = d.shelters.length
-    ? Math.round(d.shelters.filter(s => s.avgStay > 0)
-        .reduce((sum, s) => sum + s.avgStay, 0) /
-        Math.max(1, d.shelters.filter(s => s.avgStay > 0).length))
-    : 0;
+  const totalAnimals = d.total ?? d.species.data.reduce((s, v) => s + v, 0);
+  const longStayPct  = totalAnimals > 0 ? Math.round((d.longStay / totalAnimals) * 100) : 0;
+  const specialPct   = totalAnimals > 0 ? Math.round((d.special  / totalAnimals) * 100) : 0;
+  const picsPct      = totalAnimals > 0 ? Math.round((d.pics     / totalAnimals) * 100) : 0;
 
-  document.getElementById("dashboard-subtitle").textContent = CONFIG.SEARCH_RADIUS_MILES + "-mile radius from " + CONFIG.SEARCH_POSTAL_CODE + " \u00B7 RescueGroups API \u00B7 Updated daily";
+  // Subtitle
+  document.getElementById("dashboard-subtitle").textContent =
+    CONFIG.SEARCH_RADIUS_MILES + "-mile radius from " + CONFIG.SEARCH_POSTAL_CODE +
+    " \u00B7 RescueGroups API \u00B7 Updated daily";
+  document.getElementById("table-sub").textContent =
+    "All organizations within " + CONFIG.SEARCH_RADIUS_MILES + " miles of Prescott, AZ · sorted by distance";
+
+  // Metric row 1
   document.getElementById("m-total").textContent = totalAnimals;
   document.getElementById("m-total-delta").textContent = "across " + d.shelters.length + " organizations";
-  document.getElementById("m-los").innerHTML = avgStayDays + '<span> days</span>';
-  document.getElementById("m-los-delta").textContent = "avg across shelters with data";
-  document.getElementById("m-adoptions").textContent = d.urgent;
-  document.getElementById("m-adoptions-delta").textContent = d.urgent > 0 ? d.urgent + " animals need priority placement" : "No urgent animals currently";
-  document.getElementById("m-longstay").textContent = longStay;
-  document.getElementById("m-longstay-delta").textContent = longStayPct + "% of total population";
+  document.getElementById("m-los").innerHTML = d.avgDays + '<span> days</span>';
+  document.getElementById("m-los-delta").textContent = "avg since listed as available";
+  document.getElementById("m-urgent").textContent = d.urgent;
+  document.getElementById("m-urgent-delta").textContent =
+    d.urgent > 0 ? d.urgent + " need priority placement" : "No urgent animals currently";
+  document.getElementById("m-foster").textContent = d.foster;
+  document.getElementById("m-foster-delta").textContent =
+    d.foster > 0 ? d.foster + " animals need a foster home" : "No foster needs currently";
 
-  
+  // Metric row 2
+  document.getElementById("m-longstay").textContent = d.longStay;
+  document.getElementById("m-longstay-delta").textContent = longStayPct + "% of total population";
+  document.getElementById("m-special").textContent = d.special;
+  document.getElementById("m-special-delta").textContent = specialPct + "% of total population";
+  document.getElementById("m-pending").textContent = d.pending;
+  document.getElementById("m-pending-delta").textContent = "adoptions in progress";
+  document.getElementById("m-pics").textContent = d.pics;
+  document.getElementById("m-pics-delta").textContent = picsPct + "% have at least one photo";
+
   // Shelter table
   const tbody = document.getElementById("shelter-tbody");
-  tbody.innerHTML = d.shelters.map(s => {
-    const capColor = s.capacity >= 85 ? "#E24B4A" : s.capacity >= 65 ? "#EF9F27" : "#1D9E75";
-    return `<tr class="${s.focal ? 'yhs' : ''}">
+  tbody.innerHTML = d.shelters.map(s => `
+    <tr class="${s.focal ? 'yhs' : ''}">
       <td class="org-name">${s.name}</td>
       <td>${s.city}, ${s.state}</td>
-      <td>${s.distance}</td>
+      <td>${s.distance} mi</td>
       <td>${s.inCare}</td>
-      <td>${s.avgStay} days</td>
-      <td>${s.adoptions}</td>
       <td>
-        <span class="cap-bar-wrap"><span class="cap-bar" style="width:${s.capacity}%;background:${capColor};"></span></span>
-        <span style="font-size:12px;color:${capColor};">${s.capacity}%</span>
+        ${s.dogs  > 0 ? `<span class="pill pill-dog">${s.dogs}d</span>` : ""}
+        ${s.cats  > 0 ? `<span class="pill pill-cat">${s.cats}c</span>` : ""}
+        ${s.other > 0 ? `<span class="pill pill-other">${s.other}o</span>` : ""}
       </td>
-    </tr>`;
-  }).join("");
+      <td>${s.avgStay} days</td>
+      <td>${s.urgent > 0 ? `<span style="color:var(--red);font-weight:500;">${s.urgent}</span>` : "—"}</td>
+      <td>${s.foster > 0 ? `<span style="color:var(--amber);font-weight:500;">${s.foster}</span>` : "—"}</td>
+    </tr>`).join("");
 
   const chartDefaults = {
-    responsive: true,
-    maintainAspectRatio: false,
+    responsive: true, maintainAspectRatio: false,
     plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => "  " + ctx.formattedValue } } }
   };
-
   const tickStyle = { color: "#9B9A96", font: { family: "'DM Sans', sans-serif", size: 11 } };
   const gridStyle = { color: "rgba(0,0,0,0.06)" };
 
-// Species donut — dynamic legend
-const speciesColors = ["#378ADD","#1D9E75","#EF9F27","#888780","#7F77DD","#E24B4A"];
-const speciesTotal = d.species.data.reduce((s, v) => s + v, 0);
-document.getElementById("species-legend").innerHTML = d.species.labels.map((label, i) => {
-  const pct = speciesTotal > 0 ? Math.round((d.species.data[i] / speciesTotal) * 100) : 0;
-  return `<span><span class="ld" style="background:${speciesColors[i % speciesColors.length]}"></span>${label} ${pct}%</span>`;
-}).join("");
-
-new Chart(document.getElementById("c1"), {
-  type: "doughnut",
-  data: {
-    labels: d.species.labels,
-    datasets: [{
-      data: d.species.data,
-      backgroundColor: d.species.labels.map((_, i) => speciesColors[i % speciesColors.length]),
-      borderWidth: 0,
-      hoverOffset: 4
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    cutout: "68%"
-  }
-});
+  // Species donut
+  const speciesColors = ["#378ADD","#1D9E75","#EF9F27","#888780","#7F77DD","#E24B4A"];
+  const speciesTotal = d.species.data.reduce((s, v) => s + v, 0);
+  document.getElementById("species-legend").innerHTML = d.species.labels.map((label, i) => {
+    const pct = speciesTotal > 0 ? Math.round((d.species.data[i] / speciesTotal) * 100) : 0;
+    return `<span><span class="ld" style="background:${speciesColors[i % speciesColors.length]}"></span>${label} ${pct}%</span>`;
+  }).join("");
+  new Chart(document.getElementById("c1"), {
+    type: "doughnut",
+    data: {
+      labels: d.species.labels,
+      datasets: [{ data: d.species.data, backgroundColor: d.species.labels.map((_, i) => speciesColors[i % speciesColors.length]), borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: "68%" }
+  });
 
   // Age bar
   new Chart(document.getElementById("c2"), {
     type: "bar",
-    data: {
-      labels: d.ages.labels,
-      datasets: [{ data: d.ages.data, backgroundColor: ["#7F77DD","#378ADD","#1D9E75","#EF9F27"], borderRadius: 5, borderWidth: 0 }]
-    },
+    data: { labels: d.ages.labels, datasets: [{ data: d.ages.data, backgroundColor: ["#7F77DD","#378ADD","#1D9E75","#EF9F27"], borderRadius: 5, borderWidth: 0 }] },
     options: { ...chartDefaults, scales: { x: { grid: { display: false }, ticks: tickStyle }, y: { grid: gridStyle, ticks: tickStyle } } }
   });
 
@@ -688,16 +687,17 @@ new Chart(document.getElementById("c1"), {
         { label: "31+ days",  data: d.los.long,  backgroundColor: "#E24B4A", borderRadius: 0, borderWidth: 0 }
       ]
     },
-    options: {
-      ...chartDefaults,
-      scales: {
-        x: { stacked: true, grid: { display: false }, ticks: tickStyle },
-        y: { stacked: true, grid: gridStyle, ticks: tickStyle }
-      }
-    }
+    options: { ...chartDefaults, scales: { x: { stacked: true, grid: { display: false }, ticks: tickStyle }, y: { stacked: true, grid: gridStyle, ticks: tickStyle } } }
   });
 
-  // Update header badge and timestamp
+  // Size bar
+  new Chart(document.getElementById("c5"), {
+    type: "bar",
+    data: { labels: d.sizes.labels, datasets: [{ data: d.sizes.data, backgroundColor: ["#7F77DD","#378ADD","#1D9E75","#EF9F27"], borderRadius: 5, borderWidth: 0 }] },
+    options: { ...chartDefaults, scales: { x: { grid: { display: false }, ticks: tickStyle }, y: { grid: gridStyle, ticks: tickStyle } } }
+  });
+
+  // Badge and timestamp
   const now = new Date();
   document.getElementById("last-updated").textContent =
     "Updated " + now.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
@@ -707,7 +707,7 @@ new Chart(document.getElementById("c1"), {
     document.getElementById("badge-mock").style.display = "none";
     document.getElementById("badge-live").style.display = "inline-flex";
     document.getElementById("footer-note").textContent =
-      "Powered by RescueGroups.org API · Built by Lisa Hresko · Live data";
+      "Powered by RescueGroups.org API \u00B7 Built by Lisa Hresko \u00B7 Live data";
   }
 }
 
@@ -718,7 +718,7 @@ async function init() {
     render(data);
   } catch (err) {
     console.error("Dashboard error:", err);
-    render(MOCK); // fall back to mock on error
+    render(MOCK);
   }
 }
 
