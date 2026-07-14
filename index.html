@@ -463,12 +463,13 @@ async function fetchLiveData() {
     "Content-Type": "application/vnd.api+json"
   };
 
-  const body = (radius) => JSON.stringify({
+const body = (radius, limit = 250) => JSON.stringify({
     data: {
       filterRadius: {
         postalcode: CONFIG.SEARCH_POSTAL_CODE,
         miles: radius
-      }
+      },
+      limit: limit
     }
   });
 
