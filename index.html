@@ -51,54 +51,24 @@
     gap: 1rem;
   }
 
-  .header-left h1 {
-    font-size: 16px;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-  }
-
-  .header-left p {
-    font-size: 12px;
-    color: var(--text-2);
-    margin-top: 2px;
-  }
+  .header-left h1 { font-size: 16px; font-weight: 500; letter-spacing: -0.01em; }
+  .header-left p  { font-size: 12px; color: var(--text-2); margin-top: 2px; }
 
   .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    font-family: var(--mono);
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-weight: 400;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-family: var(--mono);
+    padding: 3px 9px; border-radius: 20px; font-weight: 400;
   }
 
-  .badge-mock {
-    background: var(--amber-lt);
-    color: #854F0B;
-    border: 1px solid rgba(186,117,23,0.2);
-  }
-
-  .badge-live {
-    background: var(--teal-lt);
-    color: #0F6E56;
-    border: 1px solid rgba(15,110,86,0.2);
-    display: none;
-  }
+  .badge-mock { background: var(--amber-lt); color: #854F0B; border: 1px solid rgba(186,117,23,0.2); }
+  .badge-live { background: var(--teal-lt); color: #0F6E56; border: 1px solid rgba(15,110,86,0.2); display: none; }
 
   .badge-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    animation: pulse 2s infinite;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; animation: pulse 2s infinite;
   }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
   .main { padding: 1.5rem 2rem 3rem; max-width: 1200px; margin: 0 auto; }
 
@@ -117,42 +87,32 @@
   }
 
   .metric-label {
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-3);
-    margin-bottom: 8px;
+    font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-3); margin-bottom: 8px;
   }
 
   .metric-value {
-    font-size: 32px;
-    font-weight: 300;
-    letter-spacing: -0.03em;
-    line-height: 1;
-    color: var(--text);
+    font-size: 32px; font-weight: 300;
+    letter-spacing: -0.03em; line-height: 1; color: var(--text);
   }
 
   .metric-value span { font-size: 16px; font-weight: 400; color: var(--text-2); }
 
   .metric-delta {
-    font-size: 12px;
-    margin-top: 6px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    font-size: 12px; margin-top: 6px;
+    display: flex; align-items: center; gap: 4px;
   }
 
-  .delta-up   { color: var(--red); }
-  .delta-down { color: var(--teal); }
-  .delta-good { color: var(--teal); }
+  .delta-up      { color: var(--red); }
+  .delta-down    { color: var(--teal); }
+  .delta-good    { color: var(--teal); }
   .delta-neutral { color: var(--text-3); }
 
   .chart-grid-2 {
     display: grid;
     grid-template-columns: minmax(0,1fr) minmax(0,1fr);
-    gap: 14px;
-    margin-bottom: 14px;
+    gap: 14px; margin-bottom: 14px;
   }
 
   .card {
@@ -162,103 +122,21 @@
     padding: 1.25rem;
   }
 
-  .card-title {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  .card-sub {
-    font-size: 11px;
-    color: var(--text-3);
-    margin-top: 2px;
-    margin-bottom: 14px;
-  }
+  .card-title { font-size: 13px; font-weight: 500; color: var(--text); }
+  .card-sub   { font-size: 11px; color: var(--text-3); margin-top: 2px; margin-bottom: 14px; }
 
   .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 12px;
-    font-size: 12px;
-    color: var(--text-2);
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 12px; font-size: 12px; color: var(--text-2);
   }
 
-  .legend span {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
+  .legend span { display: flex; align-items: center; gap: 5px; }
 
-  .ld {
-    width: 9px;
-    height: 9px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  .shelter-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    margin-top: 10px;
-  }
-
-  .shelter-table th {
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-3);
-    text-align: left;
-    padding: 0 10px 10px 10px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .shelter-table td {
-    padding: 10px;
-    color: var(--text-2);
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-  }
-
-  .shelter-table tr:last-child td { border-bottom: none; }
-
-  .shelter-table tr.yhs td {
-    color: #0C447C;
-    background: var(--blue-lt);
-  }
-
-  .shelter-table tr.yhs td:first-child {
-    border-radius: var(--radius) 0 0 var(--radius);
-  }
-
-  .shelter-table tr.yhs td:last-child {
-    border-radius: 0 var(--radius) var(--radius) 0;
-  }
-
-  .org-name { font-weight: 500; color: var(--text); }
-  .yhs .org-name { color: #0C447C; }
-
-  .pill {
-    display: inline-block;
-    font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 20px;
-    margin-right: 3px;
-    font-family: var(--mono);
-  }
-
-  .pill-dog  { background: #E6F1FB; color: #0C447C; }
-  .pill-cat  { background: var(--teal-lt); color: #0F6E56; }
-  .pill-other { background: var(--gray-lt); color: #555; }
+  .ld { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
 
   .footer {
-    margin-top: 2rem;
-    font-size: 11px;
-    color: var(--text-3);
-    font-family: var(--mono);
-    text-align: center;
+    margin-top: 2rem; font-size: 11px;
+    color: var(--text-3); font-family: var(--mono); text-align: center;
   }
 
   @media (max-width: 700px) {
@@ -276,17 +154,10 @@
      ============================================================ -->
 <script>
   const CONFIG = {
-    // Step 1: Paste your RescueGroups API key here
     API_KEY: "dbw7cbfj",
-
-    // Step 2: Set USE_LIVE_DATA to true once you have a valid API key
     USE_LIVE_DATA: true,
-
-    // Step 3: Adjust search radius (miles) around Prescott if desired
-    SEARCH_RADIUS_MILES: 100,
+    SEARCH_RADIUS_MILES: 50,
     SEARCH_POSTAL_CODE: "86301",
-
-    // Step 4: Set your focal shelter's RescueGroups org ID here
     FOCAL_ORG_ID: "",
     FOCAL_ORG_NAME: "Yavapai Humane Society",
   };
@@ -301,8 +172,7 @@
   <div style="display:flex;gap:8px;align-items:center;">
     <span class="badge badge-mock" id="badge-mock"><span>mock data</span></span>
     <span class="badge badge-live" id="badge-live">
-      <span class="badge-dot"></span>
-      <span>live</span>
+      <span class="badge-dot"></span><span>live</span>
     </span>
     <span id="last-updated" style="font-size:11px;font-family:var(--mono);color:var(--text-3);"></span>
   </div>
@@ -310,7 +180,7 @@
 
 <main class="main">
 
-  <!-- Metric cards -->
+  <!-- Metric row 1 -->
   <div class="metrics">
     <div class="metric">
       <div class="metric-label">Animals in care</div>
@@ -334,8 +204,8 @@
     </div>
   </div>
 
-  <!-- Second metric row -->
-  <div class="metrics" style="margin-bottom:1.5rem;">
+  <!-- Metric row 2 -->
+  <div class="metrics">
     <div class="metric">
       <div class="metric-label">Long-stay animals (&gt;30 days)</div>
       <div class="metric-value" id="m-longstay">—</div>
@@ -404,31 +274,6 @@
     </div>
   </div>
 
-  <!-- Shelter breakdown table -->
-  <div class="card" style="margin-top:0;">
-    <div class="card-title">Shelter breakdown</div>
-    <div class="card-sub" id="table-sub">Loading...</div>
-    <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;padding:8px 10px;background:var(--amber-lt);border-radius:var(--radius);border:1px solid rgba(186,117,23,0.2);">
-      ⚠️ Animal counts reflect only organizations that publish listings via RescueGroups.org. Shelters using Petfinder, ShelterLuv, PetPoint, or other systems will appear with 0 animals even if they have animals available. A fully comprehensive view would require aggregating across all shelter management platforms.
-    </div>
-    <table class="shelter-table">
-      <thead>
-        <tr>
-          <th>Organization</th>
-          <th>Location</th>
-          <th>Distance</th>
-          <th>In care</th>
-          <th>Dogs / Cats / Other</th>
-          <th>Avg. days available</th>
-          <th>Urgent</th>
-          <th>Needs foster</th>
-        </tr>
-      </thead>
-      <tbody id="shelter-tbody">
-      </tbody>
-    </table>
-  </div>
-
   <div class="footer" id="footer-note">
     Powered by RescueGroups.org API &middot; Built by Lisa Hresko
   </div>
@@ -436,23 +281,19 @@
 </main>
 
 <script>
-/* ── Mock data (used when USE_LIVE_DATA = false) ── */
+/* ── Mock data ── */
 const MOCK = {
-  shelters: [
-    { name: "Yavapai Humane Society", focal: true,  distance: 5,  city: "Prescott",       state: "AZ", inCare: 142, dogs: 80, cats: 52, other: 10, avgStay: 21, urgent: 3, foster: 8 },
-    { name: "Prescott Valley Animal", focal: false, distance: 12, city: "Prescott Valley", state: "AZ", inCare: 58,  dogs: 30, cats: 20, other: 8,  avgStay: 27, urgent: 1, foster: 4 },
-    { name: "Chino Valley Shelter",   focal: false, distance: 22, city: "Chino Valley",    state: "AZ", inCare: 44,  dogs: 25, cats: 15, other: 4,  avgStay: 19, urgent: 0, foster: 2 },
-  ],
-  species:   { labels: ["Dogs","Cats","Horses","Other"], data: [159, 119, 22, 12] },
-  ages:      { labels: ["Baby","Young","Adult","Senior"], data: [42, 88, 134, 48] },
-  sizes:     { labels: ["Small","Medium","Large","X-Large"], data: [55, 98, 76, 15] },
+  species:  { labels: ["Dogs","Cats","Horses","Other"], data: [159, 119, 22, 12] },
+  ages:     { labels: ["Baby","Young","Adult","Senior"], data: [42, 88, 134, 48] },
+  sizes:    { labels: ["Small","Medium","Large","X-Large"], data: [55, 98, 76, 15] },
   los: {
     labels: ["Dogs","Cats","Horses","Other"],
     short:  [48, 39, 5, 3],
     mid:    [72, 54, 11, 6],
     long:   [39, 26, 6, 3],
   },
-  urgent: 4, foster: 14, special: 7, pending: 22, pics: 198, longStay: 47,
+  urgent: 4, foster: 14, special: 7, pending: 22,
+  pics: 198, longStay: 47, avgDays: 21, total: 312,
 };
 
 /* ── Live API fetch ── */
@@ -463,32 +304,25 @@ async function fetchLiveData() {
     "Content-Type": "application/vnd.api+json"
   };
 
-const body = (radius, limit = 250) => JSON.stringify({
+  const reqBody = JSON.stringify({
     data: {
       filterRadius: {
         postalcode: CONFIG.SEARCH_POSTAL_CODE,
-        miles: radius
-      },
-      limit: limit
+        miles: CONFIG.SEARCH_RADIUS_MILES
+      }
     }
   });
 
-  const [animalsResp, orgsResp] = await Promise.all([
-    fetch(`${base}/animals/search/available/`, { method: "POST", headers, body: body(CONFIG.SEARCH_RADIUS_MILES) }),
-    fetch(`${base}/orgs/search/`, { method: "POST", headers, body: body(CONFIG.SEARCH_RADIUS_MILES) })
-  ]);
+  const animalsResp = await fetch(`${base}/animals/search/available/`, {
+    method: "POST", headers, body: reqBody
+  });
+  const animalsJson = await animalsResp.json();
 
-  const [animalsJson, orgsJson] = await Promise.all([
-    animalsResp.json(),
-    orgsResp.json()
-  ]);
-
-  return transformApiResponse(animalsJson, orgsJson);
+  return transformApiResponse(animalsJson);
 }
 
-function transformApiResponse(animalsJson, orgsJson) {
+function transformApiResponse(animalsJson) {
   const animals = animalsJson.data || [];
-  const orgs = orgsJson.data || [];
   const now = new Date();
   const losCapDays = 365;
 
@@ -502,7 +336,7 @@ function transformApiResponse(animalsJson, orgsJson) {
     return "Other";
   }
 
-  // Days available — use availableDate, fall back to updatedDate, cap at losCapDays
+  // Days available
   function getDaysAvailable(a) {
     const dateStr = a.attributes?.availableDate || a.attributes?.updatedDate || a.attributes?.createdDate;
     if (!dateStr) return 0;
@@ -555,32 +389,7 @@ function transformApiResponse(animalsJson, orgsJson) {
   const totalDaysAvail = animals.reduce((sum, a) => sum + getDaysAvailable(a), 0);
   const avgDaysAvail  = animals.length ? Math.round(totalDaysAvail / animals.length) : 0;
 
-  // Shelter rows
-  const shelterRows = orgs.map(org => {
-    const orgAnimals = animals.filter(a => {
-      const rel = a.relationships?.orgs?.data;
-      return Array.isArray(rel) ? rel.some(r => r.id === org.id) : rel?.id === org.id;
-    });
-    const orgDays = orgAnimals.reduce((sum, a) => sum + getDaysAvailable(a), 0);
-    const dogs  = orgAnimals.filter(a => getSpecies(a) === "Dogs").length;
-    const cats  = orgAnimals.filter(a => getSpecies(a) === "Cats").length;
-    const other = orgAnimals.length - dogs - cats;
-    return {
-      name:     org.attributes?.name || "Unknown",
-      focal:    org.id === CONFIG.FOCAL_ORG_ID,
-      distance: Math.round(org.attributes?.distance || 0),
-      city:     org.attributes?.city || "",
-      state:    org.attributes?.state || "",
-      inCare:   orgAnimals.length,
-      dogs, cats, other,
-      avgStay:  orgAnimals.length ? Math.round(orgDays / orgAnimals.length) : 0,
-      urgent:   orgAnimals.filter(a => a.attributes?.priority === 0).length,
-      foster:   orgAnimals.filter(a => a.attributes?.isNeedingFoster === true).length,
-    };
-  }).filter(s => s.inCare > 0).sort((a, b) => a.distance - b.distance);
-
   return {
-    shelters: shelterRows.length ? shelterRows : MOCK.shelters,
     species:  { labels: speciesKeys, data: speciesKeys.map(k => speciesCounts[k] || 0) },
     ages:     { labels: Object.keys(ageCounts), data: Object.values(ageCounts) },
     sizes:    { labels: Object.keys(sizeCounts), data: Object.values(sizeCounts) },
@@ -607,12 +416,10 @@ function render(d) {
   document.getElementById("dashboard-subtitle").textContent =
     CONFIG.SEARCH_RADIUS_MILES + "-mile radius from " + CONFIG.SEARCH_POSTAL_CODE +
     " \u00B7 RescueGroups API \u00B7 Updated daily";
-  document.getElementById("table-sub").textContent =
-    "All organizations within " + CONFIG.SEARCH_RADIUS_MILES + " miles of Prescott, AZ · sorted by distance";
 
   // Metric row 1
   document.getElementById("m-total").textContent = totalAnimals;
-  document.getElementById("m-total-delta").textContent = "across " + d.shelters.length + " organizations";
+  document.getElementById("m-total-delta").textContent = "animals available for adoption";
   document.getElementById("m-los").innerHTML = d.avgDays + '<span> days</span>';
   document.getElementById("m-los-delta").textContent = "avg since listed as available";
   document.getElementById("m-urgent").textContent = d.urgent;
@@ -631,24 +438,6 @@ function render(d) {
   document.getElementById("m-pending-delta").textContent = "adoptions in progress";
   document.getElementById("m-pics").textContent = d.pics;
   document.getElementById("m-pics-delta").textContent = picsPct + "% have at least one photo";
-
-  // Shelter table
-  const tbody = document.getElementById("shelter-tbody");
-  tbody.innerHTML = d.shelters.map(s => `
-    <tr class="${s.focal ? 'yhs' : ''}">
-      <td class="org-name">${s.name}</td>
-      <td>${s.city}, ${s.state}</td>
-      <td>${s.distance} mi</td>
-      <td>${s.inCare}</td>
-      <td>
-        ${s.dogs  > 0 ? `<span class="pill pill-dog">${s.dogs}d</span>` : ""}
-        ${s.cats  > 0 ? `<span class="pill pill-cat">${s.cats}c</span>` : ""}
-        ${s.other > 0 ? `<span class="pill pill-other">${s.other}o</span>` : ""}
-      </td>
-      <td>${s.avgStay} days</td>
-      <td>${s.urgent > 0 ? `<span style="color:var(--red);font-weight:500;">${s.urgent}</span>` : "—"}</td>
-      <td>${s.foster > 0 ? `<span style="color:var(--amber);font-weight:500;">${s.foster}</span>` : "—"}</td>
-    </tr>`).join("");
 
   const chartDefaults = {
     responsive: true, maintainAspectRatio: false,
