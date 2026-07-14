@@ -577,7 +577,7 @@ function transformApiResponse(animalsJson, orgsJson) {
       urgent:   orgAnimals.filter(a => a.attributes?.priority === 0).length,
       foster:   orgAnimals.filter(a => a.attributes?.isNeedingFoster === true).length,
     };
-  }).sort((a, b) => a.distance - b.distance);
+  }).filter(s => s.inCare > 0).sort((a, b) => a.distance - b.distance);
 
   return {
     shelters: shelterRows.length ? shelterRows : MOCK.shelters,
