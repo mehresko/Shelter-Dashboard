@@ -283,7 +283,7 @@
     USE_LIVE_DATA: true,
 
     // Step 3: Adjust search radius (miles) around Prescott if desired
-    SEARCH_RADIUS_MILES: 1000,
+    SEARCH_RADIUS_MILES: 100,
     SEARCH_POSTAL_CODE: "86301",
 
     // Step 4: Set your focal shelter's RescueGroups org ID here
@@ -404,6 +404,30 @@
     </div>
   </div>
 
+  <!-- Shelter breakdown table -->
+  <div class="card" style="margin-top:0;">
+    <div class="card-title">Shelter breakdown</div>
+    <div class="card-sub" id="table-sub">Loading...</div>
+    <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;padding:8px 10px;background:var(--amber-lt);border-radius:var(--radius);border:1px solid rgba(186,117,23,0.2);">
+      ⚠️ Animal counts reflect only organizations that publish listings via RescueGroups.org. Shelters using Petfinder, ShelterLuv, PetPoint, or other systems will appear with 0 animals even if they have animals available. A fully comprehensive view would require aggregating across all shelter management platforms.
+    </div>
+    <table class="shelter-table">
+      <thead>
+        <tr>
+          <th>Organization</th>
+          <th>Location</th>
+          <th>Distance</th>
+          <th>In care</th>
+          <th>Dogs / Cats / Other</th>
+          <th>Avg. days available</th>
+          <th>Urgent</th>
+          <th>Needs foster</th>
+        </tr>
+      </thead>
+      <tbody id="shelter-tbody">
+      </tbody>
+    </table>
+  </div>
 
   <div class="footer" id="footer-note">
     Powered by RescueGroups.org API &middot; Built by Lisa Hresko
@@ -531,7 +555,32 @@ function transformApiResponse(animalsJson, orgsJson) {
   const totalDaysAvail = animals.reduce((sum, a) => sum + getDaysAvailable(a), 0);
   const avgDaysAvail  = animals.length ? Math.round(totalDaysAvail / animals.length) : 0;
 
+  // Shelter rows
+  const shelterRows = orgs.map(org => {
+    const orgAnimals = animals.filter(a => {
+      const rel = a.relationships?.orgs?.data;
+      return Array.isArray(rel) ? rel.some(r => r.id === org.id) : rel?.id === org.id;
+    });
+    const orgDays = orgAnimals.reduce((sum, a) => sum + getDaysAvailable(a), 0);
+    const dogs  = orgAnimals.filter(a => getSpecies(a) === "Dogs").length;
+    const cats  = orgAnimals.filter(a => getSpecies(a) === "Cats").length;
+    const other = orgAnimals.length - dogs - cats;
+    return {
+      name:     org.attributes?.name || "Unknown",
+      focal:    org.id === CONFIG.FOCAL_ORG_ID,
+      distance: Math.round(org.attributes?.distance || 0),
+      city:     org.attributes?.city || "",
+      state:    org.attributes?.state || "",
+      inCare:   orgAnimals.length,
+      dogs, cats, other,
+      avgStay:  orgAnimals.length ? Math.round(orgDays / orgAnimals.length) : 0,
+      urgent:   orgAnimals.filter(a => a.attributes?.priority === 0).length,
+      foster:   orgAnimals.filter(a => a.attributes?.isNeedingFoster === true).length,
+    };
+  }).filter(s => s.inCare > 0).sort((a, b) => a.distance - b.distance);
+
   return {
+    shelters: shelterRows.length ? shelterRows : MOCK.shelters,
     species:  { labels: speciesKeys, data: speciesKeys.map(k => speciesCounts[k] || 0) },
     ages:     { labels: Object.keys(ageCounts), data: Object.values(ageCounts) },
     sizes:    { labels: Object.keys(sizeCounts), data: Object.values(sizeCounts) },
@@ -582,6 +631,24 @@ function render(d) {
   document.getElementById("m-pending-delta").textContent = "adoptions in progress";
   document.getElementById("m-pics").textContent = d.pics;
   document.getElementById("m-pics-delta").textContent = picsPct + "% have at least one photo";
+
+  // Shelter table
+  const tbody = document.getElementById("shelter-tbody");
+  tbody.innerHTML = d.shelters.map(s => `
+    <tr class="${s.focal ? 'yhs' : ''}">
+      <td class="org-name">${s.name}</td>
+      <td>${s.city}, ${s.state}</td>
+      <td>${s.distance} mi</td>
+      <td>${s.inCare}</td>
+      <td>
+        ${s.dogs  > 0 ? `<span class="pill pill-dog">${s.dogs}d</span>` : ""}
+        ${s.cats  > 0 ? `<span class="pill pill-cat">${s.cats}c</span>` : ""}
+        ${s.other > 0 ? `<span class="pill pill-other">${s.other}o</span>` : ""}
+      </td>
+      <td>${s.avgStay} days</td>
+      <td>${s.urgent > 0 ? `<span style="color:var(--red);font-weight:500;">${s.urgent}</span>` : "—"}</td>
+      <td>${s.foster > 0 ? `<span style="color:var(--amber);font-weight:500;">${s.foster}</span>` : "—"}</td>
+    </tr>`).join("");
 
   const chartDefaults = {
     responsive: true, maintainAspectRatio: false,
