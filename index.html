@@ -374,15 +374,6 @@
   <!-- Charts row 2 -->
   <div class="chart-grid-2">
     <div class="card">
-      <div class="card-title">Adoptions trend</div>
-      <div class="card-sub">Past 6 months &middot; all shelters</div>
-      <div class="legend">
-        <span><span class="ld" style="background:#1D9E75"></span>Adoptions</span>
-        <span><span class="ld" style="background:#378ADD"></span>Intakes</span>
-      </div>
-      <div style="position:relative;height:210px;"><canvas id="c3"></canvas></div>
-    </div>
-    <div class="card">
       <div class="card-title">Length of stay distribution</div>
       <div class="card-sub">Current animals &middot; days in shelter</div>
       <div class="legend">
@@ -586,7 +577,6 @@ function transformApiResponse(animalsJson, orgsJson) {
       labels: Object.keys(ageCounts),
       data: Object.values(ageCounts)
     },
-    trend: MOCK.trend,
     los: {
       labels: speciesKeys,
       short: speciesKeys.map(k => losBySpecies[k]?.short || 0),
@@ -683,19 +673,6 @@ new Chart(document.getElementById("c1"), {
     data: {
       labels: d.ages.labels,
       datasets: [{ data: d.ages.data, backgroundColor: ["#7F77DD","#378ADD","#1D9E75","#EF9F27"], borderRadius: 5, borderWidth: 0 }]
-    },
-    options: { ...chartDefaults, scales: { x: { grid: { display: false }, ticks: tickStyle }, y: { grid: gridStyle, ticks: tickStyle } } }
-  });
-
-  // Trend line
-  new Chart(document.getElementById("c3"), {
-    type: "line",
-    data: {
-      labels: d.trend.labels,
-      datasets: [
-        { label: "Adoptions", data: d.trend.adoptions, borderColor: "#1D9E75", backgroundColor: "rgba(29,158,117,0.07)", fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2 },
-        { label: "Intakes",   data: d.trend.intakes,   borderColor: "#378ADD", backgroundColor: "rgba(55,138,221,0.05)", fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2 }
-      ]
     },
     options: { ...chartDefaults, scales: { x: { grid: { display: false }, ticks: tickStyle }, y: { grid: gridStyle, ticks: tickStyle } } }
   });
