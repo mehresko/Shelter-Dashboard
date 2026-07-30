@@ -328,13 +328,6 @@ async function fetchLiveData() {
   return transformApiResponse({ data: all });
 }
 
-  const animalsResp = await fetch(`${base}/animals/search/available/`, {
-    method: "POST", headers, body: reqBody
-  });
-  const animalsJson = await animalsResp.json();
-
-  return transformApiResponse(animalsJson);
-}
 
 function transformApiResponse(animalsJson) {
   const animals = animalsJson.data || [];
