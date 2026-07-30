@@ -303,7 +303,6 @@ async function fetchLiveData() {
     "Authorization": CONFIG.API_KEY,
     "Content-Type": "application/vnd.api+json"
   };
-
   const reqBody = JSON.stringify({
     data: {
       filterRadius: {
@@ -312,6 +311,22 @@ async function fetchLiveData() {
       }
     }
   });
+
+  // API returns 25 per page by default (250 max) — page through all results.
+  const all = [];
+  let page = 1, totalPages = 1;
+  do {
+    const resp = await fetch(`${base}/animals/search/available/?limit=250&page=${page}`, {
+      method: "POST", headers, body: reqBody
+    });
+    const json = await resp.json();
+    all.push(...(json.data || []));
+    totalPages = json.meta?.pages ?? 1;
+    page++;
+  } while (page <= totalPages);
+
+  return transformApiResponse({ data: all });
+}
 
   const animalsResp = await fetch(`${base}/animals/search/available/`, {
     method: "POST", headers, body: reqBody
