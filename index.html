@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prescott-Area Shelter Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Regional Shelter Population Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   :root {
@@ -51,8 +51,8 @@
     gap: 1rem;
   }
 
-  .header-left h1 { font-size: 16px; font-weight: 500; letter-spacing: -0.01em; }
-  .header-left p  { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+  .header-left h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+  .header-left p  { font-size: 12px; color: var(--text-2); margin-top: 3px; }
 
   .badge {
     display: inline-flex; align-items: center; gap: 5px;
@@ -134,6 +134,27 @@
 
   .ld { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
 
+  /* Shelter breakdown */
+  .sb-note {
+    background: var(--amber-lt); color: #7a4e0a;
+    border: 1px solid rgba(186,117,23,0.25); border-radius: 8px;
+    padding: 10px 12px; font-size: 11.5px; line-height: 1.5; margin-bottom: 14px;
+  }
+  .sb-scroll { overflow-x: auto; }
+  .sb-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .sb-table th {
+    text-align: left; font-weight: 500; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.04em; font-size: 10.5px;
+    padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .sb-table td {
+    padding: 9px 10px; border-bottom: 1px solid var(--border);
+    color: var(--text); vertical-align: top;
+  }
+  .sb-table td.num, .sb-table th.num { text-align: right; white-space: nowrap; }
+  .sb-table tbody tr:hover { background: var(--gray-lt); }
+  .sb-org { font-weight: 500; }
+
   .footer {
     margin-top: 2rem; font-size: 11px;
     color: var(--text-3); font-family: var(--mono); text-align: center;
@@ -144,6 +165,7 @@
     .chart-grid-2 { grid-template-columns: 1fr; }
     .main { padding: 1rem; }
     .header { padding: 1rem; }
+    .header-left h1 { font-size: 20px; }
   }
 </style>
 </head>
@@ -166,7 +188,7 @@
 
 <header class="header">
   <div class="header-left">
-    <h1>Prescott-area shelter population dashboard</h1>
+    <h1>Regional Shelter Population Dashboard</h1>
     <p id="dashboard-subtitle">Loading...</p>
   </div>
   <div style="display:flex;gap:8px;align-items:center;">
@@ -274,6 +296,34 @@
     </div>
   </div>
 
+  <!-- Shelter breakdown -->
+  <div class="card" style="margin-top:14px;">
+    <div class="card-title">Shelter breakdown</div>
+    <div class="card-sub">Organizations with animals in care within <span id="sb-radius">—</span> miles of <span id="sb-zip">—</span> &middot; sorted by distance</div>
+    <div class="sb-note">
+      Counts reflect only organizations that publish listings via RescueGroups.org. Shelters using
+      Petfinder, ShelterLuv, PetPoint, or other systems will not appear here even if they have animals
+      available. A fully comprehensive view would require aggregating across all shelter management platforms.
+    </div>
+    <div class="sb-scroll">
+      <table class="sb-table">
+        <thead>
+          <tr>
+            <th>Organization</th>
+            <th>Location</th>
+            <th class="num">Distance</th>
+            <th class="num">In care</th>
+            <th>Dogs / Cats / Other</th>
+            <th class="num">Avg days</th>
+            <th class="num">Urgent</th>
+            <th class="num">Needs foster</th>
+          </tr>
+        </thead>
+        <tbody id="shelter-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="footer" id="footer-note">
     Powered by RescueGroups.org API &middot; Built by Lisa Hresko
   </div>
@@ -294,9 +344,10 @@ const MOCK = {
   },
   urgent: 4, foster: 14, special: 7, pending: 22,
   pics: 198, longStay: 47, avgDays: 21, total: 312,
+  shelters: [],
 };
 
-/* ── Live API fetch ── */
+/* ── Live API fetch (paginated) ── */
 async function fetchLiveData() {
   const base = "https://api.rescuegroups.org/v5/public";
   const headers = {
@@ -313,26 +364,35 @@ async function fetchLiveData() {
   });
 
   // API returns 25 per page by default (250 max) — page through all results.
-  const all = [];
+  // Collect both the animals (data) and the related org records (included).
+  const allAnimals = [];
+  const allIncluded = [];
   let page = 1, totalPages = 1;
   do {
     const resp = await fetch(`${base}/animals/search/available/?limit=250&page=${page}`, {
       method: "POST", headers, body: reqBody
     });
     const json = await resp.json();
-    all.push(...(json.data || []));
+    allAnimals.push(...(json.data || []));
+    allIncluded.push(...(json.included || []));
     totalPages = json.meta?.pages ?? 1;
     page++;
   } while (page <= totalPages);
 
-  return transformApiResponse({ data: all });
+  return transformApiResponse({ data: allAnimals, included: allIncluded });
 }
-
 
 function transformApiResponse(animalsJson) {
   const animals = animalsJson.data || [];
+  const included = animalsJson.included || [];
   const now = new Date();
   const losCapDays = 365;
+
+  // Org lookup from the included records
+  const orgById = {};
+  included.forEach(item => {
+    if (item.type === "orgs") orgById[item.id] = item.attributes || {};
+  });
 
   // Species detection
   function getSpecies(a) {
@@ -387,6 +447,46 @@ function transformApiResponse(animalsJson) {
 
   const speciesKeys = Object.keys(speciesCounts).length ? Object.keys(speciesCounts) : ["Dogs", "Cats", "Other"];
 
+  // Shelter breakdown — group the animals we fetched by their organization.
+  // In-care counts therefore sum exactly to the headline total.
+  const shelterMap = {};
+  animals.forEach(a => {
+    const orgId = a.relationships?.orgs?.data?.[0]?.id;
+    if (!orgId) return;
+    if (!shelterMap[orgId]) {
+      const org = orgById[orgId] || {};
+      const loc = org.citystate || [org.city, org.state].filter(Boolean).join(", ") || "—";
+      shelterMap[orgId] = {
+        name: org.name || "Unknown organization",
+        location: loc,
+        distance: Infinity,
+        inCare: 0, dogs: 0, cats: 0, other: 0,
+        daysSum: 0, urgent: 0, foster: 0,
+      };
+    }
+    const s = shelterMap[orgId];
+    s.inCare++;
+    const dist = a.attributes?.distance;
+    if (typeof dist === "number" && dist < s.distance) s.distance = dist;
+    const sp = getSpecies(a);
+    if (sp === "Dogs") s.dogs++;
+    else if (sp === "Cats") s.cats++;
+    else s.other++;
+    s.daysSum += getDaysAvailable(a);
+    if (a.attributes?.priority === 0) s.urgent++;
+    if (a.attributes?.isNeedingFoster === true) s.foster++;
+  });
+
+  const shelters = Object.values(shelterMap).map(s => ({
+    name: s.name,
+    location: s.location,
+    distance: isFinite(s.distance) ? Math.round(s.distance) : null,
+    inCare: s.inCare,
+    dogs: s.dogs, cats: s.cats, other: s.other,
+    avgDays: s.inCare ? Math.round(s.daysSum / s.inCare) : 0,
+    urgent: s.urgent, foster: s.foster,
+  })).sort((a, b) => (a.distance ?? 99999) - (b.distance ?? 99999));
+
   // Global metrics
   const urgentCount   = animals.filter(a => a.attributes?.priority === 0).length;
   const fosterCount   = animals.filter(a => a.attributes?.isNeedingFoster === true).length;
@@ -410,6 +510,7 @@ function transformApiResponse(animalsJson) {
     urgent: urgentCount, foster: fosterCount, special: specialCount,
     pending: pendingCount, pics: picsCount, longStay: longStayCount,
     avgDays: avgDaysAvail, total: animals.length,
+    shelters,
   };
 }
 
@@ -423,7 +524,7 @@ function render(d) {
   // Subtitle
   document.getElementById("dashboard-subtitle").textContent =
     CONFIG.SEARCH_RADIUS_MILES + "-mile radius from " + CONFIG.SEARCH_POSTAL_CODE +
-    " \u00B7 RescueGroups API \u00B7 Updated daily";
+    " · RescueGroups API · Updated daily";
 
   // Metric row 1
   document.getElementById("m-total").textContent = totalAnimals;
@@ -498,6 +599,26 @@ function render(d) {
     options: { ...chartDefaults, scales: { x: { grid: { display: false }, ticks: tickStyle }, y: { grid: gridStyle, ticks: tickStyle } } }
   });
 
+  // Shelter breakdown table
+  document.getElementById("sb-radius").textContent = CONFIG.SEARCH_RADIUS_MILES;
+  document.getElementById("sb-zip").textContent = CONFIG.SEARCH_POSTAL_CODE;
+  const tbody = document.getElementById("shelter-tbody");
+  if (d.shelters && d.shelters.length) {
+    tbody.innerHTML = d.shelters.map(s => `
+      <tr>
+        <td class="sb-org">${s.name}</td>
+        <td>${s.location}</td>
+        <td class="num">${s.distance != null ? s.distance + " mi" : "—"}</td>
+        <td class="num">${s.inCare}</td>
+        <td>${s.dogs} / ${s.cats} / ${s.other}</td>
+        <td class="num">${s.avgDays}</td>
+        <td class="num">${s.urgent || "—"}</td>
+        <td class="num">${s.foster || "—"}</td>
+      </tr>`).join("");
+  } else {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--text-3);padding:14px;">No organizations with published animals in range.</td></tr>`;
+  }
+
   // Badge and timestamp
   const now = new Date();
   document.getElementById("last-updated").textContent =
@@ -508,7 +629,7 @@ function render(d) {
     document.getElementById("badge-mock").style.display = "none";
     document.getElementById("badge-live").style.display = "inline-flex";
     document.getElementById("footer-note").textContent =
-      "Powered by RescueGroups.org API \u00B7 Built by Lisa Hresko \u00B7 Live data";
+      "Powered by RescueGroups.org API · Built by Lisa Hresko · Live data";
   }
 }
 
